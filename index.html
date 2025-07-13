@@ -1,19 +1,105 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html><html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zen Notes Dapp</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zen Notes | Powered by ZenChain</title>
+  <link rel="icon" href="https://zenchain.io/assets/logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111;
+      --accent: #007aff;
+      --box: #f0f0f0;
+      --note-border: #ddd;
+    }
+    [data-theme="dark"] {
+      --bg: #0d1117;
+      --text: #c9d1d9;
+      --accent: #58a6ff;
+      --box: #1c2128;
+      --note-border: #30363d;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #0d1117, #161b22);
-      color: #c9d1d9;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      animation: fadeIn 1s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: var(--box);
+      border-bottom: 1px solid var(--note-border);
+    }
+    header img {
+      height: 50px;
+    }
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown button {
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: var(--box);
+      min-width: 180px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      z-index: 1;
+    }
+    .dropdown-content a {
+      color: var(--accent);
+      padding: 10px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .dropdown-content a:hover {
+      background-color: #ccc;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    main {
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem;
-      min-height: 100vh;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    p {
+      max-width: 600px;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .demo-toggle, .theme-toggle {
+      margin: 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     textarea, button {
       width: 100%;
@@ -23,7 +109,7 @@
       font-size: 1rem;
       border-radius: 10px;
       border: none;
-      box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     }
     textarea {
       resize: none;
@@ -45,66 +131,115 @@
       margin-top: 2rem;
       max-width: 500px;
       width: 100%;
-      background: #1c2128;
+      background: var(--box);
       border-radius: 10px;
       padding: 1rem;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
     .note {
-      border-bottom: 1px solid #30363d;
+      border-bottom: 1px solid var(--note-border);
       padding: 0.75rem 0;
     }
     .note:last-child {
       border-bottom: none;
     }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
+    .empty-state {
+      text-align: center;
+      color: #888;
+      margin-top: 1rem;
     }
-    h3 {
-      margin-bottom: 1rem;
-      color: #58a6ff;
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 8px;
     }
   </style>
 </head>
 <body>
-  <h1>📝 Zen Notes</h1>
-  <p style="max-width: 500px; text-align: center; margin-bottom: 1rem; color: #8b949e;">
-    Share your thoughts, ideas, or motivation with the ZenChain community. Each note is tied to your wallet and shows the power of real human connection in Web3.
-  </p>
-  <button id="connect">🔗 Connect Wallet</button>
-  <form id="noteForm">
-    <textarea id="noteInput" rows="4" placeholder="Write your note here (max 200 chars)" maxlength="200"></textarea>
-    <button type="submit" id="submitNote" disabled>Submit Note 📨</button>
-  </form>
-  <div class="note-list" id="noteList">
-    <h3>📜 Recent Notes</h3>
-    <div id="notes"></div>
-  </div>  <script>
+  <header>
+    <img src="https://zenchain.io/assets/logo.png" alt="ZenChain Logo">
+    <div>
+      <div class="theme-toggle">
+        <label for="theme">🌗 Theme</label>
+        <input type="checkbox" id="theme" />
+      </div>
+      <div class="dropdown">
+        <button>☰ Menu</button>
+        <div class="dropdown-content">
+          <a href="https://zenchain.io" target="_blank">🌐 ZenChain</a>
+          <a href="https://x.com/zen_chain" target="_blank">X (Twitter)</a>
+          <a href="https://discord.gg/zenchain" target="_blank">Discord</a>
+          <a href="#about">About ZenChain</a>
+        </div>
+      </div>
+    </div>
+  </header>  <main>
+    <h1>📝 Zen Notes</h1>
+    <p>Share your thoughts, ideas, or motivation with the ZenChain community. Every note is tied to your wallet and showcases the human side of Web3.</p>
+    <div class="demo-toggle">
+      <label for="demo">Use Demo Mode</label>
+      <input type="checkbox" id="demo" />
+    </div>
+    <button id="connect">🔗 Connect Wallet</button>
+    <form id="noteForm">
+      <textarea id="noteInput" rows="4" placeholder="Write your note here (max 200 chars)" maxlength="200"></textarea>
+      <button type="submit" id="submitNote" disabled>Submit Note 📨</button>
+    </form><div class="note-list" id="noteList">
+  <h3>📜 Recent Notes</h3>
+  <div id="notes"></div>
+  <div id="emptyState" class="empty-state" style="display:none;">No notes yet. Be the first to write something awesome!</div>
+</div>
+
+<section id="about" style="margin-top: 4rem; max-width: 600px; text-align: center;">
+  <h2 style="color: var(--accent); margin-bottom: 1rem;">📖 About ZenChain</h2>
+  <p>ZenChain is the first EVM-compatible Bitcoin Layer 1 focused on real decentralization, speed, and scalability. Built for DeFi and GameFi, it's designed to empower developers and community members with the tools they need to create the next generation of Web3 applications.</p>
+</section>
+
+  </main>  <footer>
+    Built by Hassan 💻 • ZenChain Builder Candidate <br>
+    <a href="https://zenchain.io">ZenChain.io</a>
+    <a href="https://x.com/zen_chain">Twitter</a>
+    <a href="https://discord.gg/zenchain">Discord</a>
+  </footer>  <script>
     let userAddress = "";
     const connectBtn = document.getElementById("connect");
     const submitBtn = document.getElementById("submitNote");
     const noteForm = document.getElementById("noteForm");
     const noteInput = document.getElementById("noteInput");
     const notesDiv = document.getElementById("notes");
+    const emptyState = document.getElementById("emptyState");
+    const demoToggle = document.getElementById("demo");
+    const themeToggle = document.getElementById("theme");
 
-    const dummyNotes = [
-      { address: "0xAbc...123", note: "Stay focused and consistent!" },
-      { address: "0xDef...456", note: "ZenChain to the moon 🚀" },
-      { address: "0x789...xyz", note: "Never stop building. #Web3 💻" }
-    ];
+    const dummyNotes = [];
 
     function renderNotes() {
-      notesDiv.innerHTML = dummyNotes.map(n => `
-        <div class="note">
-          <strong>${n.address}</strong><br />
-          <span>${n.note}</span>
-        </div>`
-      ).join("");
+      if (dummyNotes.length === 0) {
+        notesDiv.innerHTML = "";
+        emptyState.style.display = "block";
+      } else {
+        emptyState.style.display = "none";
+        notesDiv.innerHTML = dummyNotes.map(n => `
+          <div class="note">
+            <strong>${n.address}</strong><br />
+            <span>${n.note}</span>
+          </div>`
+        ).join("");
+      }
     }
 
-    connectBtn.onclick = async () => {
-      if (window.ethereum) {
+    async function connectWallet() {
+      if (demoToggle.checked) {
+        userAddress = "0xDEMO...0001";
+        connectBtn.innerText = `✅ Demo Mode: ${userAddress}`;
+        submitBtn.disabled = false;
+      } else if (window.ethereum) {
         try {
           const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
           userAddress = accounts[0];
@@ -114,8 +249,17 @@
           console.error("User denied wallet connection");
         }
       } else {
-        alert("Please install MetaMask to use this Dapp.");
+        alert("Please install MetaMask or use Demo Mode.");
+        submitBtn.disabled = true;
       }
+    }
+
+    connectBtn.onclick = connectWallet;
+    demoToggle.onchange = connectWallet;
+
+    themeToggle.onchange = () => {
+      const root = document.documentElement;
+      root.setAttribute("data-theme", themeToggle.checked ? "light" : "dark");
     };
 
     noteForm.onsubmit = async (e) => {
